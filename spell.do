@@ -1,3 +1,5 @@
+// 26 Nov 2018: add first_lat first_lon last_lat last_lon to the output
+
 set more off
 
 args loc_dir dayid out_dir
@@ -22,30 +24,45 @@ bys vehicle_cd (log_dt): gen byte new_spell = _n==1 | status != status[_n-1] | (
 * calculate the ditance of travel between two consecutive readings
 bys vehicle_cd (log_dt): gen last_lat = lat[_n-1] if _n > 1
 bys vehicle_cd (log_dt): gen last_lon = lon[_n-1] if _n > 1
-vincenty lat lon last_lat last_lon, hav(distance) inkm
+geodist lat lon last_lat last_lon, g(distance) sphere
 
 * drop unneeded variables to save memory space
-drop lat lon last_lat last_lon
+drop last_lat last_lon
 
 * spell number = cumulative of spell change indicator
 bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
+
+sort vehicle_cd spell_num log_dt
+
+timer clear 1
+timer on 1
 
 * find the start and end time of each spell
 * sum up the distance inbetween readings
 * for now, assume the distance of the segment in between two speels belong to the later spell
 * there are some adjustments that may need to be made, since BREAK and OFFLINE tend to be longer than other spell
-collapse (min) spell_start_dt = log_dt (max) spell_end_dt = log_dt (sum) distance (first) status, by(vehicle_cd spell_num)
+fcollapse (min) spell_start_dt = log_dt ///
+  (max) spell_end_dt = log_dt ///
+  (sum) distance ///
+  (first) status ///
+  (first) first_lat = lat firt_lon = lon ///
+  (last) last_lat = lat last_lon = lon, by(vehicle_cd spell_num)
+
+
+timer off 1
+timer list 1
+
 
 format spell_start_dt spell_end_dt %tc
 
 label define status_lbl 1 ARRIVED 2 BREAK 3 BUSY 4 FREE 5 NOSHOW 6 OFFLINE 7 ONCALL 8 PAYMENT 9 POB 10 STC
 label values status status_lbl
 
-keep vehicle_cd spell_start_dt spell_end_dt status distance
+keep vehicle_cd spell_start_dt spell_end_dt status distance first_lat first_lon last_lat last_lon
 compress
 
 * create the output folder, if it does not exist
 capture mkdir `out_dir'
 
 * output the spells
-save `out_dir'/spell_`datestr'.dta, replace
+save `out_dir'/spellv2_`datestr'.dta, replace
