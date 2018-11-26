@@ -21,7 +21,7 @@ drop if lat > 1.443136 & lon > 103.872984
 * new spell if (1) very first obs, or (2) status change, or (3) gap > 30 mins
 bys vehicle_cd (log_dt): gen byte new_spell = _n==1 | status != status[_n-1] | (log_dt-log_dt[_n-1])/1000/60 > 30
 
-* calculate the ditance of travel between two consecutive readings
+* calculate the distance of travel between two consecutive readings
 bys vehicle_cd (log_dt): gen last_lat = lat[_n-1] if _n > 1
 bys vehicle_cd (log_dt): gen last_lon = lon[_n-1] if _n > 1
 geodist lat lon last_lat last_lon, g(distance) sphere
@@ -34,9 +34,6 @@ bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
 
 sort vehicle_cd spell_num log_dt
 
-timer clear 1
-timer on 1
-
 * find the start and end time of each spell
 * sum up the distance inbetween readings
 * for now, assume the distance of the segment in between two speels belong to the later spell
@@ -45,12 +42,8 @@ fcollapse (min) spell_start_dt = log_dt ///
   (max) spell_end_dt = log_dt ///
   (sum) distance ///
   (first) status ///
-  (first) first_lat = lat firt_lon = lon ///
+  (first) first_lat = lat first_lon = lon ///
   (last) last_lat = lat last_lon = lon, by(vehicle_cd spell_num)
-
-
-timer off 1
-timer list 1
 
 
 format spell_start_dt spell_end_dt %tc
