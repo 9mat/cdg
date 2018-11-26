@@ -1,5 +1,10 @@
 // 26 Nov 2018: add first_lat first_lon last_lat last_lon to the output
 
+profiler on
+
+timer clear 1
+timer on 1
+
 set more off
 
 args loc_dir dayid out_dir
@@ -32,7 +37,12 @@ drop last_lat last_lon
 * spell number = cumulative of spell change indicator
 bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
 
-sort vehicle_cd spell_num log_dt
+timer clear 2
+timer on 2
+
+sort vehicle_cd log_dt
+
+timer off 2
 
 * find the start and end time of each spell
 * sum up the distance inbetween readings
@@ -59,3 +69,12 @@ capture mkdir `out_dir'
 
 * output the spells
 save `out_dir'/spellv2_`datestr'.dta, replace
+
+
+timer off 1
+timer list 1
+timer list 2
+
+
+profiler off
+profiler report
