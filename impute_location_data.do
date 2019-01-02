@@ -1,9 +1,11 @@
 // global trips_folder "E:/cdg_data/generated/"
 // global until 1jan2017
+// globle common_folder "D:/Dropbox/work/data/dta"
 
-args trips_folder until
+args trips_folder common_folder until
 global trips_folder "`trips_folder'"
 global until "`until'"
+global common_folder "`common_folder'"
 
 use "$trips_folder/trips_merged_dec2feb_everything.dta" if dofc(ref_start_dt) < td($until), clear
 merge 1:1 id using "$trips_folder/trips_dec2feb_nearmrg.dta", keep(match master) nogen
@@ -59,11 +61,10 @@ gen remaining_idle_pct = (1 - remaining_working_mins/remaining_mins)*100
 
 cap drop _merge
 
-geonear id end_lat end_lon using D:/Dropbox/work/data/dta/postalgeocode.dta, n(postal latitude longitude) near(1) g(matched_dest_postcode)
+geonear id end_lat end_lon using "$common_folder/postalgeocode.dta", n(postal latitude longitude) near(1) g(matched_dest_postcode)
 
 
 replace dest_postcode = matched_dest_postcode if (job_status == . | job_status == "COMPLETED":job_status) & (dest_postcode == . | dest_postcode <= 10000)
-
 
 gen ref_postcode = dest_postcode if inlist(job_status, ., "COMPLETED":job_status)
 replace ref_postcode = matched_dest_postcode if inlist(job_status, "CANCELLED":job_status, "NO SHOW":job_status)
