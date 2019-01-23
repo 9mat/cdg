@@ -49,7 +49,7 @@ if "`command'" == "oncallspell" {
 
 
 
-if "`command'" == "oncallspellfull" {
+if "`command'" == "fulloncallspell" {
   use "`inputpath'", clear  
   gen byte oncall = inlist(status, 1, 5, 7)
 
@@ -72,7 +72,7 @@ if "`command'" == "oncallspellfull" {
   drop oncallnum
 }
 
-if "`command'" == "freespellfull" {
+if "`command'" == "fullfreespell" {
   use "`inputpath'", clear  
 
   drop if lat < 1.23765 | lat > 1.47086
@@ -92,6 +92,29 @@ if "`command'" == "freespellfull" {
   geodist lat lon next_lat next_lon, g(km_to_next) sphere
   fcollapse (min) free_start_dt = log_dt (max) free_end_dt = log_dt (firstnm) free_start_lat = lat free_start_lon = lon driver_cd (lastnm) free_end_lat = lat free_end_lon = lon (sum) free_km = km_to_next, by(vehicle_cd freenum)
   drop freenum
+}
+
+
+if "`command'" == "pobspell" {
+  use "`inputpath'", clear  
+
+  drop if lat < 1.23765 | lat > 1.47086
+  drop if lon < 103.60609 | lon > 104.044496
+  drop if lat < 1.277231 & lon > 103.87861
+  drop if lat > 1.399197 & lon > 103.932422
+  drop if lat > 1.443136 & lon > 103.872984
+
+  gen byte pob = inlist(status, 8, 9, 10)
+
+  bys vehicle_cd (log_dt): gen newpob = pob & (_n==1 | ~pob[_n-1] | (log_dt - log_dt[_n-1])/1000/60 > 10 | driver_cd != driver_cd[_n-1])
+  bys vehicle_cd (log_dt): gen endpob = pob & (_n==_N | ~pob[_n+1] | (log_dt - log_dt[_n+1])/1000/60 > 10 | driver_cd != driver_cd[_n+1])
+
+  keep if newpob | endpob
+
+  keep vehicle_cd driver_cd lat lon log_dt
+  foreach x in lat lon driver_cd log_dt {
+    rename `x' pob_`x'
+  }
 }
 
 compress
