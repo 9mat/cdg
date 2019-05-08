@@ -5,12 +5,12 @@ use "`inpf'", clear
 // quality control: drop spell with duration < 5 mins and more than 10 mins way from other spell
 bys vehicle_cd driver_cd (log_dt): gen gapmins = (log_dt - log_dt[_n-1])/1000/60 if _n > 1
 gen newspell = gapmins > 10
-bys vehicle_cd driver_cd (log_dt): gen spellnum = sum(gapmins)
-bys vehicle_cd driver_cd shiftnum: egen double speLL_start_dt = min(log_dt)
-bys vehicle_cd driver_cd shiftnum: egen double speLL_end_dt = max(log_dt)
-gen spell_mins = (speLL_end_dt - speLL_start_dt)/1000/60
+bys vehicle_cd driver_cd (log_dt): gen spellnum = sum(newspell)
+bys vehicle_cd driver_cd spellnum: egen double spell_start_dt = min(log_dt)
+bys vehicle_cd driver_cd spellnum: egen double spell_end_dt = max(log_dt)
+gen spell_mins = (spell_end_dt - spell_start_dt)/1000/60
 drop if spell_mins < 5
-drop gapmins newspell spellnum speLL_start_dt speLL_end_dt spell_mins
+drop gapmins newspell spellnum spell_start_dt spell_end_dt spell_mins
 
 
 

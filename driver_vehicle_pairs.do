@@ -117,5 +117,18 @@ if "`command'" == "pobspell" {
   }
 }
 
+
+if "`command'" == "breakspell" {
+  use "`inputpath'", clear  
+
+  gen byte break = inlist(status, 2, 3, 6)
+  bys vehicle_cd (log_dt): gen newbreak = break & (_n==1 | ~break[_n-1] | driver_cd != driver_cd[_n-1])
+  bys vehicle_cd (log_dt): gen endbreak = break & (_n==_N | ~break[_n+1] | driver_cd != driver_cd[_n+1])
+
+  keep if newbreak | endbreak
+  bys vehicle_cd (log_dt): gen breaknum = sum(newbreak)
+  collapse (min) break_start_dt = log_dt (max) break_end_dt = log_dt (first) driver_cd , by(vehicle_cd breaknum)
+}
+
 compress
 if ~missing("`outputpath'") save "`outputpath'", replace

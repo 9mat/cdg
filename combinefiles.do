@@ -9,4 +9,4 @@ foreach filename in `filelist' {
   append using "`folder'/`filename'"
 }
 
-save "`output'", replace
+saveold "`output'", replace

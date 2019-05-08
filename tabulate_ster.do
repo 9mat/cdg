@@ -1,10 +1,15 @@
 set more off
 global sterdir "./ster"
-local filelist: dir "$sterdir" files "eq*.ster", respectcase
+local prefix 190219_
+
+local filelist: dir "$sterdir" files "eq`prefix'*.ster", respectcase
+
+cap rm ./tb/eq`prefix'.rtf
 
 foreach filename in `filelist' {
   estimates use "$sterdir/`filename'"
   local eqname=subinstr("`filename'", ".ster", "", .)
+  local eqname=subinstr("`eqname'", "`prefix'", "", .)
   estimates store `eqname'
 }
 
@@ -23,48 +28,7 @@ local tb72 mins
 local tb73 wage
 local tb74 idle
 
-// cap rm ./tb/eq.rtf
-
-// #delim ;
-
-// estfe eq18 eq28 eq38 eq48, labels(
-//   driver_cd "Driver FE" 
-//   hour#dow "Hour*DOW FE" 
-//   date "Date FE"
-//   ref_postcode "Postal code FE" 
-//   hour#dow#zonecode "Hour*DOW*Zone FE")
-// ;
-
-// esttab eq18 eq28 eq38 eq48 using ./tb/eqsum.rtf,
-//   append
-//   label se star(* 0.1 ** 0.05 *** 0.01) nonotes noconstant
-//   b(3) se(3)
-//   indicate(`r(indicate_fe)', label("{Yes}" "{-}"))
-//   coeflabels(
-//     dv_cancellation "Cancellation (dummy)"
-//     dv_noshow "No-show (dummy)"
-//     cum_hours "Cumulative hours"
-//     cum_income_100 "Cumulative income ('00 SGD)"
-//     demand "Demand density"
-//     cum_completed_bookings "Previous bookings (count)"
-//     nearby_50m "Vehicles within 50m ('000)"
-//     nearby_500m "Vehicles within 500m ('000)"
-//     dv_completed_booking "Completed Booking (dummy)"
-//     distance_to_pickup "Distance to pickup (km)"
-//     oncall_mins "Oncall duration (mins)")
-//   mtitles("Stopping work" "Remaining time (mins)" "Remaining wage (SGD)" "Remaining idleness (%)")
-//   stats(N r2,
-//     label(Observations Rsquare)
-//     fmt(0 3))
-//   ;
-
-// estfe eq18 eq28 eq38 eq48, restore;
-
-// #delim cr
-
-// exit
-
-forvalues i=71/74 {
+forvalues i=1/4 {
 
 #delim ;
 
@@ -75,7 +39,7 @@ estfe eq`i'?, labels(
   hour#dow#zonecode "Hour*DOW*Zone FE")
 ;
 
-esttab eq`i'1 eq`i'2 eq`i'3 eq`i'4 eq`i'5 eq`i'6 eq`i'7 eq`i'8 using ./tb/eq.rtf,
+esttab eq`i'1 eq`i'2 eq`i'3 eq`i'4 eq`i'5 eq`i'6 eq`i'7 eq`i'8 using ./tb/eq`prefix'.rtf,
   append
   label se star(* 0.1 ** 0.05 *** 0.01) nomtitle nonotes noconstant
   b(3) se(3)
@@ -106,7 +70,7 @@ estfe eq`i'?, labels(
   hour#dow#zonecode "Hour\(\times\)DOW\(\times\)Zone FE")
 ;
 
-esttab eq`i'1 eq`i'2 eq`i'3 eq`i'4 eq`i'5 eq`i'6 eq`i'7 eq`i'8 using ./tb/eq`i'`tb`i''.tex,
+esttab eq`i'1 eq`i'2 eq`i'3 eq`i'4 eq`i'5 eq`i'6 eq`i'7 eq`i'8 using ./tb/eq`prefix'`i'`tb`i''.tex,
   replace
   label se star(* 0.1 ** 0.05 *** 0.01) nomtitle nonotes noconstant
   b(3) se(3)

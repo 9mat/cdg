@@ -1,0 +1,115 @@
+args inputfile outputfolder prefix regid
+
+set more off
+
+local nonlinear_income cum_income cum_income_sqr cum_income_cub
+
+local controls0 cum_hours
+local controls1 `controls0' cum_hours_sqr cum_hours_cub
+local controls2 `controls1' demand nearby_500m
+local controls3 `controls2' tmpc relh pm25 dv_rain
+local controls4 `controls3' cum_completed_bookings dv_booking
+local controls5 `controls4' oncall_mins distance_to_pickup
+local controls6 `controls1' `nonlinear_income'
+local controls7 `controls2' `nonlinear_income'
+local controls8 `controls3' `nonlinear_income'
+local controls9 `controls4' `nonlinear_income'
+
+local x dv_cancellation dv_noshow
+
+local y1 quit
+local y2 remaining_mins
+local y3 remaining_wage
+local y4 remaining_idle_pct
+
+local cond1 " "
+local cond2 " "
+local cond3 " if remaining_mins > 60 "
+local cond4 "`cond3'"
+
+local fevars driver_cd hour dow zonecode date
+local fe driver_cd hour#dow#zonecode date
+
+local j `=mod(`regid',10)'
+local i `=(`regid'-`j')/10'
+
+local mcontrols `controls`i''
+local my `y`j''
+
+local vars_to_generate cum_hours_sqr cum_hours_cub shift_working_hours remaining_working_mins remaining_idle_pct dv_booking dow remaining_idle_pct
+
+
+local vars_to_reg `my `fevars' `x' id `mcontrols' 
+if `j'==4 {
+  local vars_to_reg `vars_to_reg' working_hours shift_num
+}
+if `j'==3 | `j'==4 {
+  local vars_to_reg `vars_to_reg' remaining_mins
+}
+
+
+local vars_to_use: list vars_to_reg - vars_to_generate
+
+use `vars_to_use' using "`inputfile'", clear
+
+
+if `j' == 4 {
+  bys driver_cd shift_num: egen shift_working_hours = total(working_hours)
+  gen remaining_working_mins = shift_working_hours*60 - remaining_mins
+  gen remaining_idle_pct = 100 - 100*remaining_working_mins/remaining_mins
+  drop shift_num shift_working_hours remaining_working_mins
+}
+
+gen cum_hours_sqr = cum_hours^2
+gen cum_hours_cub = cum_hours^3
+
+gen dow = dow(date)
+replace dow = 8 if inlist(date, ///
+  td(25dec2016), /// Christmas
+  td(26dec2016), /// in lieu of Christmas
+  td(1jan2017), /// New Year
+  td(2jan2017), /// in lieu of New Year
+  td(28jan2017), /// CNY 1
+  td(29jan2017), /// CNY 2
+  td(30jan2017), /// in lieu of CNY 2
+  td(14apr2017), /// good Friday
+  td(10may2017), /// Vesak
+  td(25jun2017), /// Hari Raya Puasa
+  td(26jun2017), /// in lieu of Hari Raya Puasa
+  td(9aug2017), /// National Day
+  td(1sep2017), /// Hari Raya Haji
+  td(18oct2017), /// Deepavali
+  td(25dec2017), /// Christmas
+  td(1jan2018), /// New year
+  td(16feb2018), /// CNY 1
+  td(17feb2018), /// CNY 2
+  td(30mar2018) /// Good Friday
+)
+
+cap gen dv_booking = job_status != .
+
+if `i' > 60 {
+  reghdfe `my' `x' `mcontrols' if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
+}
+
+if `i' > 50 {
+  forvalues h=1/9 {
+    gen fare_hour`h' = total_trip_fare if cum_hours <= `h' & cum_hours > `h'-1
+    bys driver_cd shift_num: egen income_hour`h' = total(fare_hour`h')
+    drop fare_hour`h'
+  }
+  
+  gen income_before5 = income_hour1 + income_hour2 + income_hour3 + income_hour4
+  drop income_hour1-income_hour4
+
+
+  reghdfe `my' `x' `mcontrols' income_before5 income_hour5-income_hour9 if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
+}
+
+if `i' < 50 {
+  reghdfe `my' `x' `mcontrols' `cond`j'', absorb(`fe') cluster(driver_cd) timeit
+}
+
+est store `prefix'`regid'
+cap mkdir "`outputfolder'"
+estimate save "`outputfolder'/`prefix'`regid'", replace
