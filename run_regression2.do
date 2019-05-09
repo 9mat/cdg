@@ -14,6 +14,7 @@ local controls6 `controls1' `nonlinear_income'
 local controls7 `controls2' `nonlinear_income'
 local controls8 `controls3' `nonlinear_income'
 local controls9 `controls4' `nonlinear_income'
+local controls10 `controls5' `nonlinear_income'
 
 local x dv_cancellation dv_noshow
 
