@@ -14,6 +14,7 @@ local controls6 `controls1' `nonlinear_income'
 local controls7 `controls2' `nonlinear_income'
 local controls8 `controls3' `nonlinear_income'
 local controls9 `controls4' `nonlinear_income'
+local controls10 `controls5' `nonlinear_income'
 
 local x dv_cancellation dv_noshow
 
@@ -70,23 +71,23 @@ if `: list posof "remaining_idle_pct" in vars_to_reg' > 0 {
   drop shift_num shift_working_hours remaining_working_mins
 }
 
-if `: list posof "cum_hours_sqr" in vars_to_reg' > 0 {
+if `: list posof "cum_hours_sqr" in vars_to_reg' == 0 {
   cap gen cum_hours_sqr = cum_hours^2
 }
 
-if `: list posof "cum_hours_cub" in vars_to_reg' > 0 {
+if `: list posof "cum_hours_cub" in vars_to_reg' == 0 {
   cap gen cum_hours_cub = cum_hours^3
 }
 
-if `: list posof "cum_income" in vars_to_reg' > 0 {
+if `: list posof "cum_income" in vars_to_reg' == 0 {
   replace cum_income = cum_income/100
 }
 
-if `: list posof "cum_income_sqr" in vars_to_reg' > 0 {
+if `: list posof "cum_income_sqr" in vars_to_reg' == 0 {
   cap gen cum_income_sqr = cum_income^2
 }
 
-if `: list posof "cum_income_cub" in vars_to_reg' > 0 {
+if `: list posof "cum_income_cub" in vars_to_reg' == 0 {
   cap gen cum_income_cub = cum_income^3
 }
 
@@ -114,11 +115,9 @@ replace dow = 8 if inlist(date, ///
   td(30mar2018) /// Good Friday
 )
 
-if `: list posof "dv_booking" in vars_to_reg' > 0 {
+if `: list posof "dv_booking" in vars_to_reg' == 0 {
   cap gen dv_booking = job_status != .
 }
-
-
 
 
 if `i' > 60 {
