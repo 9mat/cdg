@@ -35,11 +35,14 @@ local i `=(`regid'-`j')/10'
 
 local mcontrols `controls`i''
 local my `y`j''
+local mcond `cond`j''
 
-local vars_to_generate cum_hours_sqr cum_hours_cub shift_working_hours remaining_working_mins remaining_idle_pct dv_booking dow remaining_idle_pct
 
+// variables that need generating
+local vars_to_generate cum_hours_sqr cum_hours_cub remaining_idle_pct dv_booking dow cum_income_sqr cum_income_cub
 
-local vars_to_reg `my `fevars' `x' id `mcontrols' 
+// variables needed for regression
+local vars_to_reg `my' `fevars' `x' id `mcontrols' 
 if `j'==4 {
   local vars_to_reg `vars_to_reg' working_hours shift_num
 }
@@ -48,22 +51,47 @@ if `j'==3 | `j'==4 {
 }
 
 
+// variables to be read from the data
 local vars_to_use: list vars_to_reg - vars_to_generate
 
+
+
+// load the data
 use `vars_to_use' using "`inputfile'", clear
 
 
-if `j' == 4 {
+
+// generate varibales for regression that are not in the data yet
+
+if `: list posof "remaining_idle_pct" in vars_to_reg' > 0 {
   bys driver_cd shift_num: egen shift_working_hours = total(working_hours)
   gen remaining_working_mins = shift_working_hours*60 - remaining_mins
   gen remaining_idle_pct = 100 - 100*remaining_working_mins/remaining_mins
   drop shift_num shift_working_hours remaining_working_mins
 }
 
-gen cum_hours_sqr = cum_hours^2
-gen cum_hours_cub = cum_hours^3
+if `: list posof "cum_hours_sqr" in vars_to_reg' > 0 {
+  cap gen cum_hours_sqr = cum_hours^2
+}
 
-gen dow = dow(date)
+if `: list posof "cum_hours_cub" in vars_to_reg' > 0 {
+  cap gen cum_hours_cub = cum_hours^3
+}
+
+if `: list posof "cum_income" in vars_to_reg' > 0 {
+  replace cum_income = cum_income/100
+}
+
+if `: list posof "cum_income_sqr" in vars_to_reg' > 0 {
+  cap gen cum_income_sqr = cum_income^2
+}
+
+if `: list posof "cum_income_cub" in vars_to_reg' > 0 {
+  cap gen cum_income_cub = cum_income^3
+}
+
+
+cap gen dow = dow(date)
 replace dow = 8 if inlist(date, ///
   td(25dec2016), /// Christmas
   td(26dec2016), /// in lieu of Christmas
@@ -86,7 +114,12 @@ replace dow = 8 if inlist(date, ///
   td(30mar2018) /// Good Friday
 )
 
-cap gen dv_booking = job_status != .
+if `: list posof "dv_booking" in vars_to_reg' > 0 {
+  cap gen dv_booking = job_status != .
+}
+
+
+
 
 if `i' > 60 {
   reghdfe `my' `x' `mcontrols' if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
@@ -107,7 +140,7 @@ if `i' > 50 {
 }
 
 if `i' < 50 {
-  reghdfe `my' `x' `mcontrols' `cond`j'', absorb(`fe') cluster(driver_cd) timeit
+  reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
 }
 
 est store `prefix'`regid'
