@@ -43,7 +43,7 @@ local mcond `cond`j''
 local vars_to_generate cum_hours_sqr cum_hours_cub remaining_idle_pct dv_booking dow cum_income_sqr cum_income_cub
 
 // variables needed for regression
-local vars_to_reg `my' `fevars' `x' id `mcontrols' 
+local vars_to_reg `my' `fevars' `x' id `mcontrols' job_status
 if `j'==4 {
   local vars_to_reg `vars_to_reg' working_hours shift_num
 }
