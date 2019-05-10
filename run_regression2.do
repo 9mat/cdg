@@ -1,4 +1,4 @@
-args inputfile outputfolder prefix regid
+args inputfile outputfolder prefix regid hour incomelb incomeub
 
 set more off
 
@@ -43,7 +43,7 @@ local mcond `cond`j''
 local vars_to_generate cum_hours_sqr cum_hours_cub remaining_idle_pct dv_booking dow cum_income_sqr cum_income_cub
 
 // variables needed for regression
-local vars_to_reg `my' `fevars' `x' id `mcontrols' job_status
+local vars_to_reg `my' `fevars' `x' id `mcontrols' job_status cum_income
 if `j'==4 {
   local vars_to_reg `vars_to_reg' working_hours shift_num
 }
@@ -120,6 +120,19 @@ if `: list posof "dv_booking" in vars_to_reg' > 0 {
 }
 
 
+local postfix ""
+
+if "`hour'" != "" & "`hour'" != "all" {
+  keep if cum_hours >= `hour'-1 & cum_hours < `hour'
+  local postfix "`postfix'h`hour'"
+}
+
+if "`incomelb'" != "" & "`incomeub'" != "" {
+  keep if cum_income >= `incomelb'/100 & cum_income < `incomeub'/100
+  local postfix "`postfix'h`hour'il`incomelb'iu`incomeub'"
+}
+
+
 
 
 if `i' > 60 {
@@ -144,6 +157,8 @@ if `i' < 50 {
   reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
 }
 
-est store `prefix'`regid'
+estadd ysumm
+
+est store `prefix'`regid'`postfix'
 cap mkdir "`outputfolder'"
-estimate save "`outputfolder'/`prefix'`regid'", replace
+estimate save "`outputfolder'/`prefix'`regid'`postfix'", replace
