@@ -129,7 +129,7 @@ if "`hour'" != "" & "`hour'" != "all" {
 
 if "`incomelb'" != "" & "`incomeub'" != "" {
   keep if cum_income >= `incomelb'/100 & cum_income < `incomeub'/100
-  local postfix "`postfix'h`hour'il`incomelb'iu`incomeub'"
+  local postfix "`postfix'il`incomelb'iu`incomeub'"
 }
 
 
@@ -158,6 +158,34 @@ if `i' < 50 {
 }
 
 estadd ysumm
+
+
+if `: list posof "cum_hours_cub" in vars_to_reg' > 0 {
+  lincom cum_hours + 16*cum_hours_sqr + 192*cum_hours_cub
+}
+else {
+  lincom cumh_hours
+}
+
+estadd scalar mxhour8 = `r(estimate)'
+estadd scalar mxhour8se = `r(se)'
+
+
+if `: list posof "cum_income" in vars_to_reg' > 0 {
+  if `: list posof "cum_income_cub" in vars_to_reg' > 0 {
+    lincom cum_income + 4*cum_income_sqr + 12*cum_income_cub
+  }
+  else  {
+    lincom cum_income
+  }
+
+  estadd scalar mxincome200 = `r(estimate)'
+  estadd scalar mxincome200se = `r(se)'
+}
+else {
+  estadd scalar mxincome200 = .
+  estadd scalar mxincome200se = .
+}
 
 est store `prefix'`regid'`postfix'
 cap mkdir "`outputfolder'"
