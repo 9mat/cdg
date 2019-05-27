@@ -171,7 +171,7 @@ estadd scalar mxhour8 = `r(estimate)'
 estadd scalar mxhour8se = `r(se)'
 
 
-if `: list posof "cum_income" in vars_to_reg' > 0 {
+if `: list posof "cum_income" in mcontrol' > 0 {
   if `: list posof "cum_income_cub" in vars_to_reg' > 0 {
     lincom cum_income + 4*cum_income_sqr + 12*cum_income_cub
   }
