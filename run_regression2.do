@@ -1,4 +1,4 @@
-args inputfile outputfolder prefix regid hour incomelb incomeub
+args inputfile outputfolder prefix regid hour incomelb incomeub nox
 
 set more off
 
@@ -127,13 +127,12 @@ if "`hour'" != "" & "`hour'" != "all" {
   local postfix "`postfix'h`hour'"
 }
 
-if "`incomelb'" != "" & "`incomeub'" != "" {
+if "`incomelb'" != "" & "`incomeub'" != "" & "`incomelb'" != "-" & "`incomeub'" != "-" {
   keep if cum_income >= `incomelb'/100 & cum_income < `incomeub'/100
   local postfix "`postfix'il`incomelb'iu`incomeub'"
 }
 
-
-
+local postfix "`postfix'`nox'"
 
 if `i' > 60 {
   reghdfe `my' `x' `mcontrols' if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
@@ -153,9 +152,17 @@ if `i' > 50 {
   reghdfe `my' `x' `mcontrols' income_before5 income_hour5-income_hour9 if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
 }
 
+
+
 if `i' < 50 {
-  reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
+  if "`nox'" == "" {
+    reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
+  }
+  else {
+    reghdfe `my' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit    
+  }
 }
+
 
 estadd ysumm
 
@@ -164,14 +171,14 @@ if `: list posof "cum_hours_cub" in vars_to_reg' > 0 {
   lincom cum_hours + 16*cum_hours_sqr + 192*cum_hours_cub
 }
 else {
-  lincom cumh_hours
+  lincom cum_hours
 }
 
 estadd scalar mxhour8 = `r(estimate)'
 estadd scalar mxhour8se = `r(se)'
 
 
-if `: list posof "cum_income" in mcontrol' > 0 {
+if `: list posof "cum_income" in mcontrols' > 0 {
   if `: list posof "cum_income_cub" in vars_to_reg' > 0 {
     lincom cum_income + 4*cum_income_sqr + 12*cum_income_cub
   }
