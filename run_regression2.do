@@ -1,4 +1,4 @@
-args inputfile outputfolder prefix regid hour incomelb incomeub nox
+args inputfile outputfolder prefix regid hour incomelb incomeub xid feid
 
 set more off
 
@@ -16,7 +16,6 @@ local controls8 `controls3' `nonlinear_income'
 local controls9 `controls4' `nonlinear_income'
 local controls10 `controls5' `nonlinear_income'
 
-local x dv_cancellation dv_noshow
 
 local y1 quit
 local y2 remaining_mins
@@ -28,8 +27,26 @@ local cond2 " "
 local cond3 " if remaining_mins > 60 "
 local cond4 "`cond3'"
 
+
+local feset "driver_cd hour#dow#zonecode date"
+local feset1 "driver_cd date"
+local feset2 "driver_cd hour#dow date"
+local feset3 "driver_cd hour#dow#zonecode date"
+
+local fe `feset`feid''
+
+
+
 local fevars driver_cd hour dow zonecode date
-local fe driver_cd hour#dow#zonecode date
+
+if "`xid'" != "none" {
+  local x dv_cancellation dv_noshow
+}
+else {
+  local x ""
+}
+
+
 
 local j `=mod(`regid',10)'
 local i `=(`regid'-`j')/10'
@@ -132,7 +149,14 @@ if "`incomelb'" != "" & "`incomeub'" != "" & "`incomelb'" != "-" & "`incomeub'" 
   local postfix "`postfix'il`incomelb'iu`incomeub'"
 }
 
-local postfix "`postfix'`nox'"
+if "`xid'" != "normal" & "`xid'" != "" {
+  local postfix "`postfix'x`nox'"
+}
+
+if "`feid'" != "" {
+  local postfix "`postfix'fe`feid'"
+}
+
 
 if `i' > 60 {
   reghdfe `my' `x' `mcontrols' if cum_hours >= 9 & cum_hours < 10, absorb(`fe') cluster(driver_cd) timeit
@@ -155,12 +179,7 @@ if `i' > 50 {
 
 
 if `i' < 50 {
-  if "`nox'" == "" {
-    reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
-  }
-  else {
-    reghdfe `my' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit    
-  }
+  reghdfe `my' `x' `mcontrols' `mcond', absorb(`fe') cluster(driver_cd) timeit
 }
 
 
