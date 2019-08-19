@@ -20,7 +20,7 @@ drop if lat > 1.399197 & lon > 103.932422
 drop if lat > 1.443136 & lon > 103.872984
 
 * new spell if (1) very first obs, or (2) status change, or  (3) driver changes, or (3) gap > 30 mins
-bys vehicle_cd (log_dt): gen byte (new_spell = _n==1) | (status != status[_n-1]) | (driver_cd != driver_cd[_n-1]) | ((log_dt-log_dt[_n-1])/1000/60 > 30)
+bys vehicle_cd (log_dt): gen byte new_spell = (_n==1) | (status != status[_n-1]) | (driver_cd != driver_cd[_n-1]) | ((log_dt-log_dt[_n-1])/1000/60 > 30)
 
 * spell number = cumulative of spell change indicator
 bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
@@ -53,11 +53,13 @@ format spell_start_dt spell_end_dt %tc
 label define status_lbl 1 ARRIVED 2 BREAK 3 BUSY 4 FREE 5 NOSHOW 6 OFFLINE 7 ONCALL 8 PAYMENT 9 POB 10 STC
 label values status status_lbl
 
-keep vehicle_cd spell_start_dt spell_end_dt status distance first_lat first_lon last_lat last_lon
+keep vehicle_cd driver_cd spell_start_dt spell_end_dt status distance first_lat first_lon last_lat last_lon
+
 compress
 
 * create the output folder, if it does not exist
 capture mkdir `out_dir'
 
 * output the spells
+di "`out_dir'/spellv3_`datestr'.dta"
 save `out_dir'/spellv3_`datestr'.dta, replace
