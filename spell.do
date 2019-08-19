@@ -1,4 +1,5 @@
 // 26 Nov 2018: add first_lat first_lon last_lat last_lon to the output
+// 18 Aug 2019: add changes in driver_cd as new spell markers
 
 set more off
 
@@ -18,8 +19,11 @@ drop if lat < 1.277231 & lon > 103.87861
 drop if lat > 1.399197 & lon > 103.932422
 drop if lat > 1.443136 & lon > 103.872984
 
-* new spell if (1) very first obs, or (2) status change, or (3) gap > 30 mins
-bys vehicle_cd (log_dt): gen byte new_spell = _n==1 | status != status[_n-1] | (log_dt-log_dt[_n-1])/1000/60 > 30
+* new spell if (1) very first obs, or (2) status change, or  (3) driver changes, or (3) gap > 30 mins
+bys vehicle_cd (log_dt): gen byte (new_spell = _n==1) | (status != status[_n-1]) | (driver_cd != driver_cd[_n-1]) | ((log_dt-log_dt[_n-1])/1000/60 > 30)
+
+* spell number = cumulative of spell change indicator
+bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
 
 * calculate the distance of travel between two consecutive readings
 bys vehicle_cd (log_dt): gen last_lat = lat[_n-1] if _n > 1
@@ -28,9 +32,6 @@ geodist lat lon last_lat last_lon, g(distance) sphere
 
 * drop unneeded variables to save memory space
 drop last_lat last_lon
-
-* spell number = cumulative of spell change indicator
-bys vehicle_cd (log_dt): gen spell_num = sum(new_spell)
 
 sort vehicle_cd spell_num log_dt
 
@@ -42,6 +43,7 @@ fcollapse (min) spell_start_dt = log_dt ///
   (max) spell_end_dt = log_dt ///
   (sum) distance ///
   (first) status ///
+  (first) driver_cd ///
   (first) first_lat = lat first_lon = lon ///
   (last) last_lat = lat last_lon = lon, by(vehicle_cd spell_num)
 
@@ -58,4 +60,4 @@ compress
 capture mkdir `out_dir'
 
 * output the spells
-save `out_dir'/spellv2_`datestr'.dta, replace
+save `out_dir'/spellv3_`datestr'.dta, replace
