@@ -26,7 +26,7 @@ if "`vehlocfile'" == "" {
   exit
 }
 
-sample 1
+// sample 1
 
 local mappaths D:/Dropbox/work/data
 local mappaths `mappaths' C:/Users/long/Dropbox/work/data
