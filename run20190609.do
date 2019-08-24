@@ -154,15 +154,16 @@ foreach id in 1 2 3 4 5 6 7 {
 }
 
 
+
+
 forvalues h = 6/10 {
-  reghdfe `y' `x' `control5' if cum_hours >= `h'-1 & cum_hours <`h', absorb(`fe6') cluster(driver_cd)
+  reghdfe `y' `x' `control5' if cum_hours >= `h'-1 & cum_hours <`h' & , absorb(`fe6') cluster(driver_cd)
   estadd ysumm
 
   est store `prefix'quith`h'
   cap mkdir "`outputfolder'"
   estimate save "`outputfolder'/`prefix'quith`h'", replace  
 }
-
 
 
 gen farebeforeh5 = total_trip_fare if cum_hours < 5
@@ -270,3 +271,116 @@ use id quit dv_cancellation dv_noshow remaining_wage remaining_mins driver_cd ho
 
 
 merge 1:1 id using F:/Temp/futureearnings, nogen keep(match master)
+
+gen cum_hours_sqr = cum_hours^2
+
+gen dv_booking = job_status != .
+
+
+
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 7 & cum_hours < 10 & cum_income < 100 & cum_income > 50, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+estadd ysumm
+
+estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/quitincome1.ster, replace
+eststo quitincome1
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 7 & cum_hours < 10 & cum_income < 150 & cum_income > 100, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+
+estadd ysumm
+
+estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/quitincome2.ster, replace
+eststo quitincome2
+
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 7 & cum_hours < 10 & cum_income < 200 & cum_income > 150, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+estadd ysumm
+
+estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/quitincome3.ster, replace
+eststo quitincome3
+
+// reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 8 & cum_hours < 9 & cum_income < 250 & cum_income > 200, absorb(driver_cd hour#dow#zonecode date)
+
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 7 & cum_hours < 10 & cum_income < 300 & cum_income > 250, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+estadd ysumm
+
+estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/quitincome4.ster, replace
+eststo quitincome4
+
+reghdfe quit dv_cancellation dv_noshow cum_hours cum_income demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 6 & cum_hours < 9 &  cum_income > 300 & cum_income < 350, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+estadd ysumm
+
+estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/quitincome5.ster, replace
+eststo quitincome5
+
+
+
+
+gen cum_income_100 = cum_income/100
+gen cum_income_100_sqr = cum_income_100^2
+reghdfe quit c.(dv_cancellation dv_noshow)##c.(cum_income_100 cum_income_100_sqr cum_hours) demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours > 8 & cum_hours < 9, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+estadd ysumm
+eststo quitincome6
+
+esttab quitincome1 quitincome2 quitincome3 quitincome4 quitincome5, stat(ymean N r2) se keep(dv_cancellation dv_noshow)
+
+
+
+reghdfe quit c.(dv_cancellation dv_noshow)##c.(cum_income_100 cum_income_100_sqr cum_hours) cum_completed_bookings dv_booking if cum_hours > 8 & cum_hours < 9, absorb(driver_cd hour#dow#zonecode date)
+
+reghdfe quit c.(dv_cancellation dv_noshow)##c.(cum_income_100 cum_income_100_sqr cum_hours) if cum_hours > 6 & cum_hours < 7,absorb(driver_cd hour#dow)
+
+
+
+
+
+use quit dv_cancellation dv_noshow shift_start_dt driver_cd hour date postcode zonecode cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings job_status cum_income total_trip_fare shift_num using $inputfile, clear
+
+gen start_hour = hh(shift_start_dt)
+gen dv_booking = job_status != .
+gen dow = dow(date)
+replace dow = 8 if inlist(date, ///
+  td(25dec2016), /// Christmas
+  td(26dec2016), /// in lieu of Christmas
+  td(1jan2017), /// New Year
+  td(2jan2017), /// in lieu of New Year
+  td(28jan2017), /// CNY 1
+  td(29jan2017), /// CNY 2
+  td(30jan2017), /// in lieu of CNY 2
+  td(14apr2017), /// good Friday
+  td(10may2017), /// Vesak
+  td(25jun2017), /// Hari Raya Puasa
+  td(26jun2017), /// in lieu of Hari Raya Puasa
+  td(9aug2017), /// National Day
+  td(1sep2017), /// Hari Raya Haji
+  td(18oct2017), /// Deepavali
+  td(25dec2017), /// Christmas
+  td(1jan2018), /// New year
+  td(16feb2018), /// CNY 1
+  td(17feb2018), /// CNY 2
+  td(30mar2018) /// Good Friday
+)
+
+forvalues h = 6/10 {
+  reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours >= `h'-1 & cum_hours <`h' & start_hour > 4 & start_hour < 12, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+  estadd ysumm
+
+  est store eq20190609quith`h'dayshift
+  estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/eq20190609quith`h'dayshift, replace  
+}
+
+
+forvalues h = 6/10 {
+  reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours >= `h'-1 & cum_hours <`h' & start_hour > 15, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+  estadd ysumm
+
+  est store eq20190609quith`h'nightshift
+  estimate save D:/Dropbox/work/cdg/cdg/src/ster/run20190609/eq20190609quith`h'nightshift, replace  
+}
+
+
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours >= 6 & cum_hours <10 & start_hour > 15, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
+
+reghdfe quit dv_cancellation dv_noshow cum_hours demand nearby_500m tmpc relh pm25 dv_rain oncall_mins distance_to_pickup cum_completed_bookings dv_booking if cum_hours >= 6 & cum_hours <10 & start_hour > 4 & start_hour < 12, absorb(driver_cd hour#dow#zonecode date) cluster(driver_cd)
