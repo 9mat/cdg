@@ -26,6 +26,8 @@ if "`vehlocfile'" == "" {
   exit
 }
 
+sample 1
+
 local mappaths D:/Dropbox/work/data
 local mappaths `mappaths' C:/Users/long/Dropbox/work/data
 local mappaths `mappaths' /NAS/project01/chujunhong_SPIRE/common
@@ -77,10 +79,10 @@ drop if lat < 1.277231 & lon > 103.87861
 drop if lat > 1.399197 & lon > 103.932422
 drop if lat > 1.443136 & lon > 103.872984
 
-
 geoinpoly lat lon using $mappath/masterplan14_coord
+fcollapse (sum) duration_mins dist_km, by(date hour interval15m _ID status)
+compress
 fmerge m:1 _ID using $mappath/masterplan14_data, keep(match master) nogen keepusing(PLN_AREA_C)
-fcollapse (sum) duration_mins dist_km, by(date hour interval15m PLN_AREA_C status)
 
 
 // preserve
