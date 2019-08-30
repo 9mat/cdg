@@ -13,9 +13,9 @@ local vehlocppaths `vehlocppaths' C:/data
 local vehlocppaths `vehlocppaths' /NAS/project01/chujunhong_SPIRE/vehicle_location
 
 foreach path in `vehlocppaths' {
-  di "`path'"
   capture confirm file "`path'/vehicle_location_`datestr'_`nextdaystr'.dta"
   if _rc==0 {
+    di "Read from `path'/vehicle_location_`datestr'_`nextdaystr'.dta"
     local vehlocfile "`path'/vehicle_location_`datestr'_`nextdaystr'.dta"
     use "`vehlocfile'", clear
     continue, break
@@ -23,7 +23,7 @@ foreach path in `vehlocppaths' {
 }
 
 if "`vehlocfile'" == "" {
-  di "File not found"
+  di "File not found: vehicle_location_`datestr'_`nextdaystr'.dta"
   exit
 }
 
@@ -35,15 +35,11 @@ drop if lat < 1.277231 & lon > 103.87861
 drop if lat > 1.399197 & lon > 103.932422
 drop if lat > 1.443136 & lon > 103.872984
 
-use F:/CDGData/vehicle_location/vehicle_location_20161201_20161202.dta, clear
-
-// use "`ifile'", clear
-
 gen long fivemin = int(log_dt/1000/60/5)
 bys vehicle_cd driver_cd fivemin (log_dt): keep if _n == 1
 drop if driver_cd == .
 drop fivemin
 compress
 
-save `out_dir'/loc_status_5m_`datestr'.dta, replace
+saveold `out_dir'/loc_status_5m_`datestr'.dta, replace
 
