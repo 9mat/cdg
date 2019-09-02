@@ -5,7 +5,7 @@ set rmsg on
 
 local paths "E:/cdg_data/generated"
 local paths `paths' "C:/data"
-local paths `paths' "/NAS/project01/chujunhong_SPIRE"
+local paths `paths' "/NAS/project01/chujunhong_SPIRE/trips"
 local paths `paths' "F:/CDGData/vehicle_location"
 local paths `paths' "/NAS/project01/chujunhong_SPIRE/vehicle_location"
 local paths `paths' "D:/Dropbox/work/data/dta"
