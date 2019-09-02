@@ -36,8 +36,9 @@ local nextdaystr = `=string(`date'+1,"%tdCCYYNNDD")'
 
 use * if log_dt != . & vehicle_cd != . using "$locpath/vehicle_location_`datestr'_`nextdaystr'.dta", clear
 // bys vehicle_cd log_dt: keep if _n == 1
-gduplicates drop vehicle_cd log_dt
+gduplicates drop vehicle_cd log_dt, force
 rename vehicle_cd vehicle_cd_loc
+sort vehicle_cd_loc log_dt
 tempfile locfile
 save `locfile'
 
