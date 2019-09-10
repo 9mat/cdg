@@ -56,7 +56,6 @@ foreach path in `paths' {
 
 
 timer clear 1
-timer on 1
 
 local windowstart `=dhms(`date',8,0,0)'
 local nextdaystart `=dhms(`date'+1,0,0,0)'
@@ -80,6 +79,8 @@ tempfile combinedfile
 save "`combinedfile'", emptyok
 
 while `windowstart' < `nextdaystart' - 1 { 
+
+  timer on 1
 
   di "======================================================================================="
   di "`datestr' `=hh(`windowstart')'h `=mm(`windowstart')'m"
@@ -129,6 +130,9 @@ while `windowstart' < `nextdaystart' - 1 {
 
   local windowstart `windowend'
 
+  timer off 1
+  timer list 1
+
   continue, break
 
 }
@@ -140,5 +144,3 @@ save `outpath'/nearbyveh_`datestr'.dta, replace
 // profiler report
 
 
-timer off 1
-timer list 1
