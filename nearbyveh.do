@@ -55,7 +55,10 @@ foreach path in `paths' {
 }
 
 
-local windowstart `=dhms(`date',0,0,0)'
+timer clear 1
+timer on 1
+
+local windowstart `=dhms(`date',8,0,0)'
 local nextdaystart `=dhms(`date'+1,0,0,0)'
 local nextnextdaystart `=dhms(`date'+2,0,0,0)'
 
@@ -70,6 +73,7 @@ gen long log_id = _n
 tempfile modified_locfile
 save `modified_locfile'
 
+// profiler on
 
 clear
 tempfile combinedfile
@@ -112,11 +116,12 @@ while `windowstart' < `nextdaystart' - 1 {
     foreach time in 3 5 10 {
       local suffix `=`time'*10000+`radius''
       gen veh_mins`suffix' = (log_dt - max(broadcast_dt, last_log_dt))/1000/60 if (log_dt -broadcast_dt)/1000/60 <= `time' & km_to_log_id <= `radius'/1000
-      egen veh_count`suffix' = tag(id vehicle_cd status) if (log_dt -broadcast_dt)/1000/60 <= `time' & km_to_log_id <= `radius'/1000
+      gen veh_count`suffix' = 1 if (log_dt -broadcast_dt)/1000/60 <= `time' & km_to_log_id <= `radius'/1000
+      // egen veh_count`suffix' = tag(id combstatus vehicle_cd) if (log_dt -broadcast_dt)/1000/60 <= `time' & km_to_log_id <= `radius'/1000
     }
   }
 
-
+  fcollapse (sum) veh_mins* (max) veh_count*, by(id combstatus vehicle_cd)
   fcollapse (sum) veh_mins* veh_count*, by(id combstatus)
 
   append using `combinedfile'
@@ -130,3 +135,10 @@ while `windowstart' < `nextdaystart' - 1 {
 
 cap mkdir `outpath'
 save `outpath'/nearbyveh_`datestr'.dta, replace
+
+// profiler off
+// profiler report
+
+
+timer off 1
+timer list 1
