@@ -102,9 +102,13 @@ while `windowstart' < `nextdaystart' - 1 {
   geonear id pickup_lat pickup_lon using "`windowlocfile'", n(log_id lat lon) long within(2)
   fmerge m:1 id using "`bookingfile'", keep(match master) keepusing(broadcast_dt) nogen
   fmerge m:1 log_id using "`windowlocfile'", keep(match master) keepusing(log_dt last_log_dt status vehicle_cd) nogen
-  keep if inrange(log_dt, broadcast_dt, broadcast_dt + `timebuffer'*60*1000)
 
-  gen combstatus = 1 if status == 4
+  timer on 2
+  keep if inrange(log_dt, broadcast_dt, broadcast_dt + `timebuffer'*60*1000)
+  timer off 2
+  timer list 2
+
+  gen byte combstatus = 1 if status == 4
   replace combstatus = 2 if inlist(status, 1, 5, 7, 8, 9, 10)
   replace combstatus = 3 if inlist(status, 2, 3)
 
