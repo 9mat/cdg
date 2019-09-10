@@ -57,7 +57,7 @@ foreach path in `paths' {
 
 timer clear 1
 
-local windowstart `=dhms(`date',8,0,0)'
+local windowstart `=dhms(`date',0,0,0)'
 local nextdaystart `=dhms(`date'+1,0,0,0)'
 local nextnextdaystart `=dhms(`date'+2,0,0,0)'
 
