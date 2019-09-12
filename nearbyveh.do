@@ -90,11 +90,20 @@ while `windowstart' < `nextdaystart' - 1 {
 
 
   use if inrange(log_dt, `windowstart', `bufferend') using `modified_locfile', clear
+  if _N == 0 {
+    continue
+  }
+
   tempfile windowlocfile
   save "`windowlocfile'"
 
 
   use if inrange(broadcast_dt, `windowstart', `windowend'-1) using $trippath/trips_dec2feb_for_nearbyveh.dta, clear
+
+  if _N == 0 {
+    continue
+  }
+  
   tempfile bookingfile
   save "`bookingfile'"
 
