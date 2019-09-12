@@ -135,6 +135,11 @@ while `windowstart' < `nextdaystart' - 1 {
     }
   }
 
+
+  if _N == 0 {
+    continue
+  }
+
   fcollapse (sum) veh_mins* (max) veh_count*, by(id combstatus vehicle_cd)
   fcollapse (sum) veh_mins* veh_count*, by(id combstatus)
 
