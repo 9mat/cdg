@@ -89,7 +89,7 @@ while `windowstart' < `nextdaystart' - 1 {
   local bufferend `=`windowend' + `timebuffer'*1000*60'
 
 
-  use if inrange(log_dt, `windowstart', `bufferend') using `modified_locfile', clear
+  use if inrange(log_dt, `windowstart', `bufferend') & ~inlist(., lat, lon) using `modified_locfile', clear
 
   if _N == 0 {
     local windowstart `windowend'
@@ -100,7 +100,7 @@ while `windowstart' < `nextdaystart' - 1 {
   save "`windowlocfile'"
 
 
-  use if inrange(broadcast_dt, `windowstart', `windowend'-1) using $trippath/trips_dec2feb_for_nearbyveh.dta, clear
+  use if inrange(broadcast_dt, `windowstart', `windowend'-1) & ~inlist(., pickup_lat, pickup_lon) using $trippath/trips_dec2feb_for_nearbyveh.dta, clear
 
   if _N == 0 {
     local windowstart `windowend'
@@ -155,7 +155,6 @@ while `windowstart' < `nextdaystart' - 1 {
   timer off 1
   timer list 1
 
-  continue, break
 
 }
 
