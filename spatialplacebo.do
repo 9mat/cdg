@@ -142,12 +142,15 @@ end
 
 
 
-args dayid masterfile outdir
 
-if `dayid' == -1 {
-  prepare_master using `masterfile'
+if `dayid' == 999 {
+  args dayid masterfile tripsfile
+  prepare_master using "`tripsfile'", saveto("`masterfile'")
+}
+else {
+  args dayid masterfile outdir
+  local date = `=`=td(1dec2016)'+`dayid'-1'
+  spatial_match using "`masterfile'", date(`date')  
+  save "`outdir'/spatial_placebo_match_`dayid'", replace
 }
 
-local date = `=`=td(1dec2016)'+`dayid'-1'
-spatial_match using "`masterfile'", date(`date')  
-save "`outdir'/spatial_placebo_match_`dayid'", replace
