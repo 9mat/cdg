@@ -142,13 +142,14 @@ end
 
 
 
+args dayid masterfile arg3
 
 if `dayid' == 999 {
-  args dayid masterfile tripsfile
+  local tripsfile "`arg3'"
   prepare_master using "`tripsfile'", saveto("`masterfile'")
 }
 else {
-  args dayid masterfile outdir
+  local outdir "`arg3'" 
   local date = `=`=td(1dec2016)'+`dayid'-1'
   spatial_match using "`masterfile'", date(`date')  
   save "`outdir'/spatial_placebo_match_`dayid'", replace
