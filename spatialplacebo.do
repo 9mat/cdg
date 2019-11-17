@@ -141,12 +141,24 @@ end
 
 
 
+/// for musang cluster
+/// dayid = 999: prepare the master file
+/// dayid = 998: combine the result files into one file
+/// dayid = 1 to 182: match CNS with nearest vehicle in day `dayid'
 
 args dayid masterfile arg3
 
 if `dayid' == 999 {
   local tripsfile "`arg3'"
   prepare_master using "`tripsfile'", saveto("`masterfile'")
+}
+else if `dayid' == 998 {
+  local outdir "`arg3'" 
+  forvalues i=1/90 {
+    append using "`outdir'/spatial_placebo_match_`i'"
+  }
+  bys id (dist_km): keep if _n == 1
+  save "`outdir'/../spatial_placebo_match_dec2feb.dta", replace  
 }
 else {
   local outdir "`arg3'" 
