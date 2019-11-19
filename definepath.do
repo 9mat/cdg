@@ -10,6 +10,8 @@ if "`c(hostname)'" == "powercat" {
   global drivermatchfile $cdgpath/generated/driver_cd_match.dta
 
   global cnsfile "F:/Temp/cns.dta"
+
+  global tmp "F:/Temp"
 }
 
 if "`c(hostname)'" == "musang01" | strpos("`c(hostname)'", "comp") > 0 | strpos("`c(hostname)'", "hpc") > 0 {
@@ -24,6 +26,8 @@ if "`c(hostname)'" == "musang01" | strpos("`c(hostname)'", "comp") > 0 | strpos(
   global drivermatchfile $project01/common/driver_cd_match.dta
 
   global cnsfile "$project01/cdg2/cns.dta"
+
+  global tmp "/scratch"
 }
 
 if "`c(hostname)'" == "cybermate" {
