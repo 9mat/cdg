@@ -28,26 +28,26 @@ global bwt_mins 5
 
 capture program drop countnearbybookings
 program define countnearbybookings
-  syntax using/, radius_m(real) buffer_mins(real) mm(int) [saveto(string)]
+  syntax using/, radius_m(real) buffer_mins(real) date(int) [saveto(string)]
 
   tempfile monthlymatchedjobs monthlymaster resfile
 
   // prepared jobs to be matched
   use id job_status trip_start_dt booking_dt req_pickup_dt pickup_postcode using "`using'", clear
 
-  gen double ref_start_dt = trip_start_dt if job_status == .
-  replace ref_start_dt = max(req_pickup_dt - 15*1000*60, booking_dt) if job_status != .
-  keep if inrange(j_dt, cofd(dofm(`mm')) - `buffer_mins'*1000*60, cofd(dofm(`mm'+1)) + `buffer_mins'*1000*60)
+  gen double j_dt = trip_start_dt if job_status == .
+  replace j_dt = max(req_pickup_dt - 15*1000*60, booking_dt) if job_status != .
+  keep if inrange(j_dt, cofd(`date') - `buffer_mins'*1000*60, cofd(`date'+1) + `buffer_mins'*1000*60)
 
   rename pickup_postcode postal
   fmerge m:1 postal using $commonpath/postalgeocode_extra, keep(match master) keepusing(latitude longitude) nogen
 
   gen jx = int((longitude - $sg_lon)*$kmperlon/($bwx_m/1000))
   gen jy = int((latitude - $sg_lat)*$kmperlat/($bwy_m/1000))
-  gen jt = int((ref_start_dt/1000/60 - td(1dec2016)*24*60)/$bwt_mins)
+  gen jt = int((j_dt/1000/60 - td(1dec2016)*24*60)/$bwt_mins)
 
-  keep  jt jx jy job_status latitude longitude ref_start_dt
-  rename (job_status latitude longitude ref_start_dt) (j_status j_lat j_lon j_dt)
+  keep  jt jx jy job_status latitude longitude j_dt
+  rename (job_status latitude longitude) (j_status j_lat j_lon)
   sort jt jx jy
 
   compress
@@ -57,7 +57,7 @@ program define countnearbybookings
 
 
   // prepare master files i.e. trips that we need to count the number of nearby jobs
-  use id job_status ref_end_dt ref_postcode if inrange(ref_end_dt, cofd(dofm(`mm')), cofd(dofm(`mm'+1))-1) using "`using'", clear
+  use id job_status ref_end_dt ref_postcode if inrange(ref_end_dt, cofd(`date'), cofd(`date'+1)-1) using "`using'", clear
   rename ref_postcode postal
   fmerge m:1 postal using $commonpath/postalgeocode_extra, keep(match master) keepusing(latitude longitude) nogen
 
@@ -68,7 +68,7 @@ program define countnearbybookings
   sort it ix iy
 
   compress
-  save ``monthlymaster'', replace
+  save `monthlymaster', replace
 
 
   timer clear 1
@@ -78,10 +78,10 @@ program define countnearbybookings
   save "`resfile'", replace emptyok
 
   di "============================================"
-  di `"`=string(`mm', "%tmCYN")'"'
+  di `"`=string(`date', "%tmCYND")'"'
   di "============================================"
 
-  local suffix `radius_m'm`buffer_mins'min
+  local suffix "`radius_m'm`buffer_mins'min"
 
   // loops over neighborimg map cells and time windows
 
@@ -125,24 +125,22 @@ program define countnearbybookings
     collapse (sum) bookings`suffix' completed`suffix' streethails`suffix', by(id)
 
     if "`saveto'" != "" save "`saveto'", replace
+  }
 
 end
 
 
+// countnearbybookings using $cdgpath/trips_merged_dec2feb_20190129.dta, radius_m(1000) buffer_mins(5) date(`=td(1dec2016)')
+
+
+
+exit
 
 
 if "`c(hostname)'" == "musang01" | strpos("`c(hostname)'", "comp") > 0 | strpos("`c(hostname)'", "hpc") > 0 {
-  args jid tripfile outdir
-  local mid `=mod(`jid'-1,3)'
-  local case `=int((`jid'-1)/3)'
-  local rr0 1000
-  local mm0 5
-  local rr1 500
-  local mm1 5
-  local rr2 200
-  local mm2 5
+  args jid tripfile outdir rr mm
 
-  countnearbybookings using "`tripfile'", radius_m(`rr`case'') buffer_mins(`mm`case'') mm(`=tm(2016m12)+`mid'') saveto("`outdir'/nearby`rr`case''m`mm`case''min_m`mid'")
+  countnearbybookings using "`tripfile'", radius_m(`rr') buffer_mins(`mm') date(`=td(1dec2016)+`jid'-1') saveto("`outdir'/nearby`rr'm`mm'min`jid'.dta")
 }
 
 else {
