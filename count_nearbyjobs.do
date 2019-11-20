@@ -78,7 +78,7 @@ program define countnearbybookings
   save "`resfile'", replace emptyok
 
   di "============================================"
-  di `"`=string(`date', "%tmCYND")'"'
+  di `"`=string(`date', "%tdCYND")'"'
   di "============================================"
 
   local suffix "`radius_m'm`buffer_mins'min"
@@ -120,21 +120,17 @@ program define countnearbybookings
         save "`resfile'", replace
       }
     }
-
-    use "`resfile'", clear
-    collapse (sum) bookings`suffix' completed`suffix' streethails`suffix', by(id)
-
-    if "`saveto'" != "" save "`saveto'", replace
   }
+  use "`resfile'", clear
+  collapse (sum) bookings`suffix' completed`suffix' streethails`suffix', by(id)
+
+  if "`saveto'" != "" save "`saveto'", replace
 
 end
 
 
 // countnearbybookings using $cdgpath/trips_merged_dec2feb_20190129.dta, radius_m(1000) buffer_mins(5) date(`=td(1dec2016)')
-
-
-
-exit
+// exit
 
 
 if "`c(hostname)'" == "musang01" | strpos("`c(hostname)'", "comp") > 0 | strpos("`c(hostname)'", "hpc") > 0 {
