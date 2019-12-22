@@ -135,12 +135,12 @@ cap gen cum_income_cub = cum_income^3
 
 forvalues s=0/7 {
   forvalues j=1/3 {
-    reghdfe quit ${X`j'} ${controls`i'} if ${subsample`s'}, absorb(${fe`i'}) absorb(date driver_cd)
+    reghdfe quit ${X`j'} ${controls`i'} if ${subsample`s'}, absorb(${fe`i'}) cluster(date driver_cd)
     estadd ysumm
     eststo quit`i'X`j's`s'
     estimate save $sterdir/run20191222/quit`i'X`j's`s', replace
 
-    reghdfe earnings_next60m ${X`j'} ${controls`i'} if ${subsample`s'} & remaining_mins > 60, absorb(${fe`i'}) absorb(date driver_cd)
+    reghdfe earnings_next60m ${X`j'} ${controls`i'} if ${subsample`s'} & remaining_mins > 60, absorb(${fe`i'}) cluster(date driver_cd)
     estadd ysumm
     eststo earn`i'X`j's`s'
     estimate save $sterdir/run20191222/earn`i'X`j's`s', replace
