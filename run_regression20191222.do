@@ -87,7 +87,18 @@ args i
 
 log using $sterdir/reglog`i'_$today.smcl, replace smcl name(reg`i') 
 
-use $trip201912, clear
+
+global scratchfile /scratch/trips_merged_dec2feb_20190129_2.dta
+
+cap confirm file "$scratchfile"
+
+if _rc==0{
+  use "$scratchfile", clear
+}
+else {
+  use $trip201912, clear
+}
+
 
 cap gen holiday = inlist(date, ///
   td(25dec2016), /// Christmas
