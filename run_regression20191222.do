@@ -50,7 +50,7 @@ global controls9 $controls8 $fatigecontrols2
 global fe9 $fe6
 
 global controls10 $controls9 $incomecontrols
-global fe7 $fe6
+global fe10 $fe6
 
 
 
@@ -84,6 +84,8 @@ global subsample7 freegap_mins < 2 & free_mins > 3 & cum_hours > 1
 
 
 args i
+
+log using $sterdir/reglog`i'_$today.smcl, replace smcl name(reg`i') 
 
 use $trip201912, clear
 
@@ -124,12 +126,15 @@ forvalues s=0/7 {
   forvalues j=1/3 {
     reghdfe quit ${X`j'} ${controls`i'} if ${subsample`s'}, absorb(${fe`i'}) absorb(date driver_cd)
     estadd ysumm
-    eststo quit`i'X`j'
-    estimate save $ster/run20191222/quit`i'X`j's`s', replace
+    eststo quit`i'X`j's`s'
+    estimate save $sterdir/run20191222/quit`i'X`j's`s', replace
 
     reghdfe earnings_next60m ${X`j'} ${controls`i'} if ${subsample`s'} & remaining_mins > 60, absorb(${fe`i'}) absorb(date driver_cd)
     estadd ysumm
-    eststo earn`i'X`j'
-    estimate save $ster/run20191222/earn`i'X`j's`s', replace
+    eststo earn`i'X`j's`s'
+    estimate save $sterdir/run20191222/earn`i'X`j's`s', replace
   }  
 }
+
+
+log close reg`i'
