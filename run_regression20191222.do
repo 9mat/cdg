@@ -88,7 +88,7 @@ args i
 log using $sterdir/reglog`i'_$today.smcl, replace smcl name(reg`i') 
 
 
-global scratchfile /scratch/trips_merged_dec2feb_20190129_2.dta
+global scratchfile /scratch/tmp191122.dta
 
 cap confirm file "$scratchfile"
 
