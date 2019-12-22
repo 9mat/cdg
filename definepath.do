@@ -27,6 +27,8 @@ if "`c(hostname)'" == "musang01" | strpos("`c(hostname)'", "comp") > 0 | strpos(
 
   global cnsfile "$project01/cdg2/cns.dta"
 
+  global trip201912 "$project01/trips/trips_merged_dec2feb_20190129_2.dta"
+
   global tmp "/scratch"
 }
 
