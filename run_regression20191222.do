@@ -88,16 +88,19 @@ args i
 log using $sterdir/reglog`i'_$today.smcl, replace smcl name(reg`i') 
 
 
-global scratchfile /scratch/tmp191122.dta
+// global scratchfile /scratch/tmp191122.dta
 
-cap confirm file "$scratchfile"
+// cap confirm file "$scratchfile"
 
-if _rc==0{
-  use "$scratchfile", clear
-}
-else {
-  use $trip201912, clear
-}
+// if _rc==0{
+//   use "$scratchfile", clear
+// }
+// else {
+//   use $trip201912, clear
+// }
+
+
+use $trip201912, clear
 
 
 cap gen holiday = inlist(date, ///
